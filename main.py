@@ -16,6 +16,7 @@ from neoscore.western.chordrest import Chordrest
 from neoscore.western.clef import Clef
 from neoscore.western.duration import Duration
 from neoscore.western.barline import Barline
+from neoscore.western.pedal_line import PedalLine
 
 
 class Main:
@@ -103,7 +104,6 @@ class Main:
                     raw_rest_gap = (80 - note_duration_sum) / 20
                     raw_duration, neoduration = self.calc_duration(raw_rest_gap)
                     neoname = []
-                    print(raw_rest_gap)
                     breakflag = True
 
                 # add the note/rest to the score and to the note list
@@ -150,15 +150,17 @@ class Main:
         elif pitch[-1] == "-":
             pitch = f"{pitch[0]}f"
 
-        if 2 <= octave <= 6:
+        if 1 <= octave <= 6:
             octave = 4
         if octave > 4:
             ticks = octave - 4
             for tick in range(ticks):
                 pitch += "'"
         elif octave < 4:
-            for tick in range(octave):
+            if octave == 3:
                 pitch += ","
+            elif octave == 2:
+                pitch += ",,"
 
         pitch = pitch.lower()
         return pitch, octave, duration
@@ -166,7 +168,10 @@ class Main:
     def make_UI(self):
         annotation = """
         DEMO digital score using EEG brain wave data
-        and deconstructed source music.
+        and deconstructed source music. One of the musicians wears the BrainBit
+        headset. Let the score count through the beats 1-4, then start at bar 1.
+        Musicians plays through the stable bar, while the other bar generates notes.
+        This is indicated by a pedal line.
         Players instructions:
         Dynamics = piano
         Time Sig = 4/4
@@ -174,9 +179,9 @@ class Main:
         
         """
         # add text at top
-        RichText((Mm(1), Mm(1)), None, annotation, width=Mm(120))
+        RichText((Mm(1), Mm(1)), None, annotation, width=Mm(170))
         # mfont = MusicFont("Bravura", Mm)
-        self.eeg_output = Text((ZERO, Mm(30)), None, "")
+        self.eeg_output = Text((ZERO, Mm(170)), None, "")
 
         # make 4 2 bar staves
         self.s_staff = Staff((ZERO, Mm(70)), None, Mm(180))
@@ -190,22 +195,29 @@ class Main:
         Barline(Mm(180), [self.s_staff, self.b_staff])
 
         # add clefs
-        Clef(ZERO, self.s_staff, "treble")
+        s_clef = Clef(ZERO, self.s_staff, "treble")
         Clef(ZERO, self.a_staff, "treble")
         Clef(ZERO, self.t_staff, "alto")
         Clef(ZERO, self.b_staff, "bass")
 
         # mark conductor points
         bar1_origin = Mm(10)
-        self.conductor_1_1 = Text((bar1_origin, Mm(45)), None, "1")
-        self.conductor_1_2 = Text((bar1_origin + Mm(40), Mm(45)), None, "2")
-        self.conductor_2_1 = Text((bar1_origin + Mm(90), Mm(45)), None, "3")
-        self.conductor_2_2 = Text((bar1_origin + Mm(130), Mm(45)), None, "4")
+        self.conductor_1_1 = Text((bar1_origin, Mm(50)), None, "1")
+        self.conductor_1_2 = Text((bar1_origin + Mm(40), Mm(50)), None, "2")
+        self.conductor_2_1 = Text((bar1_origin + Mm(90), Mm(50)), None, "3")
+        self.conductor_2_2 = Text((bar1_origin + Mm(130), Mm(50)), None, "4")
         self.conductor_list = [self.conductor_1_1,
                                self.conductor_1_2,
                                self.conductor_2_1,
                                self.conductor_2_2
                                ]
+
+        self.bar_indicator = PedalLine(
+            (Mm(0), Mm(20)),
+            self.b_staff,
+            Mm(90),
+            half_lift_positions=[Mm(45)]
+        )
 
     def change_beat(self, beat):
         if beat > 4:
@@ -229,10 +241,12 @@ class Main:
         beat = (int(time) % 8) + 1 # 8 beats = 2 bars
         self.change_beat(beat)
         if beat == 1:
+            self.bar_indicator.pos = (Mm(0), Mm(20))
             for n in self.notes_on_staff_list_2:
                 n.remove()
             self.build_bar(2)
         elif beat == 5:
+            self.bar_indicator.pos = (Mm(90), Mm(20))
             for n in self.notes_on_staff_list_1:
                 n.remove()
             self.build_bar(1)
