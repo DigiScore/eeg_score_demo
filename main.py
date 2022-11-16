@@ -1,13 +1,10 @@
 import score_draw
 from random import random, choice, seed
-from time import sleep
 
 from random import choice
 from brainbit import BrainbitReader
 
 from neoscore.core import neoscore
-from neoscore.core.music_font import MusicFont
-
 from neoscore.core.rich_text import RichText
 from neoscore.core.text import Text
 from neoscore.core.units import ZERO, Mm
@@ -63,29 +60,11 @@ class Main:
                 # 70% chance of note or rest
                 if random() >= 0.3:
                     # get a random note from original source list,
-                    pitch, octave, raw_duration = self.get_note(part)
-
-                    # double length of original duration
-                    raw_duration *= 2
-
-                    # calc neonote (octave and name)
-                    if pitch[-1] == "#":
-                        pitch = f"{pitch[0]}s"
-                    elif pitch[-1] == "-":
-                        pitch = f"{pitch[0]}f"
-
-                    if octave > 4:
-                        ticks = octave - 4
-                        for tick in range(ticks):
-                            pitch += "'"
-                    elif octave < 4:
-                        for tick in range(octave):
-                            pitch += ","
-
-                    # get name & octave as neoscore format
-                    neoname = [pitch.lower()]
+                    neoname, raw_duration = self.get_note(part)
 
                     # calculate duration
+                    # double length of original duration
+                    raw_duration *= 2
                     if isinstance(raw_duration, float):
                         raw_duration, neoduration = self.calc_duration(raw_duration)
                     else:
@@ -98,7 +77,7 @@ class Main:
                     neoduration = Duration(1, 4)
                     neoname = []
 
-                    # print note on neoscore
+                # print note on neoscore unless over bar limit
                 if note_duration_sum + length > 80:
                     # what is remaining?
                     raw_rest_gap = (80 - note_duration_sum) / 20
@@ -142,7 +121,6 @@ class Main:
         return raw_duration, Duration(neo_duration[0], neo_duration[1])
 
     def get_note(self, part):
-        # seed(eegdata[i])
         pitch, octave, duration = choice(part)
         # calc neonote (octave and name)
         if pitch[-1] == "#":
@@ -150,20 +128,20 @@ class Main:
         elif pitch[-1] == "-":
             pitch = f"{pitch[0]}f"
 
-        if 1 <= octave <= 6:
-            octave = 4
-        if octave > 4:
-            ticks = octave - 4
-            for tick in range(ticks):
-                pitch += "'"
-        elif octave < 4:
-            if octave == 3:
-                pitch += ","
-            elif octave == 2:
-                pitch += ",,"
+        # check octave in range
+        if 2 <= octave <= 6:
+            if octave > 4:
+                ticks = octave - 4
+                for tick in range(ticks):
+                    pitch += "'"
+            elif octave < 4:
+                if octave == 3:
+                    pitch += ","
+                elif octave == 2:
+                    pitch += ",,"
 
-        pitch = pitch.lower()
-        return pitch, octave, duration
+        neoname = [pitch.lower()]
+        return neoname, duration
 
     def make_UI(self):
         annotation = """
@@ -173,8 +151,8 @@ class Main:
         Musicians plays through the stable bar, while the other bar generates notes.
         This is indicated by a pedal line.
         Players instructions:
-        Dynamics = piano
-        Time Sig = 4/4
+        Dynamics = mp   
+        Time Sig = 4/4  
         Tempo = 60 BPM
         
         """

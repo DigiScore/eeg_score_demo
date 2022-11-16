@@ -1,7 +1,7 @@
 from music21 import converter
 
 def get_midi_lists():
-    mf = 'purcell.mid'
+    mf = 'purcell_low.mid'
     score_in = converter.parse(mf)
     s = []
     a = []
