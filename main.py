@@ -51,6 +51,7 @@ class Main:
 
         # populate the bar on each part until full
         for i, part in enumerate(self.part_list):
+            breakflag = False
             seed(self.eegdata[i])
             # one beat = 20 mm's
             note_duration_sum = 0
@@ -98,15 +99,25 @@ class Main:
 
                     # print note on neoscore
                 if note_duration_sum + length > 80:
+                    # what is remaining?
+                    raw_rest_gap = (80 - note_duration_sum) / 20
+                    raw_duration, neoduration = self.calc_duration(raw_rest_gap)
+                    neoname = []
+                    print(raw_rest_gap)
+                    breakflag = True
+
+                # add the note/rest to the score and to the note list
+                n = Chordrest(pos_x, self.staff_list[i], neoname, neoduration)
+                if bar == 1:
+                    self.notes_on_staff_list_1.append(n)
+                else:
+                    self.notes_on_staff_list_2.append(n)
+
+                # if end of bar length: break
+                if breakflag:
                     break
                 else:
-                    n = Chordrest(pos_x, self.staff_list[i], neoname, neoduration)
-                    if bar == 1:
-                        self.notes_on_staff_list_1.append(n)
-                    else:
-                        self.notes_on_staff_list_2.append(n)
-
-                note_duration_sum += length
+                    note_duration_sum += length
 
     def calc_duration(self, raw_duration):
         if raw_duration < 0.25:
@@ -116,11 +127,11 @@ class Main:
         elif raw_duration == 0.5:
             neo_duration = (1, 8)
         elif raw_duration == 0.75:
-            neo_duration = (3, 8)
+            neo_duration = (3, 16)
         elif raw_duration == 1:
             neo_duration = (1, 4)
         elif raw_duration == 1.5:
-            neo_duration = (3, 4)
+            neo_duration = (3, 8)
         elif raw_duration == 2:
             neo_duration = (1, 2)
 
