@@ -35,6 +35,7 @@ class Main:
         # build first bar
         self.eegdata = self.bb.read()
         self.beat_size = 20
+        self.beat = 1
         self.build_bar(1)
         self.build_bar(2)
 
@@ -216,14 +217,16 @@ class Main:
                                f"N2 {round(self.eegdata[3], 2)}"
 
         # calc which beat and change score
-        beat = (int(time) % 8) + 1 # 8 beats = 2 bars
-        self.change_beat(beat)
-        if beat == 1:
+        now_beat = (int(time) % 8) + 1 # 8 beats = 2 bars
+        if now_beat != self.beat:
+            self.change_beat(now_beat)
+            self.beat = now_beat
+        if now_beat == 1:
             self.bar_indicator.pos = (Mm(0), Mm(20))
             for n in self.notes_on_staff_list_2:
                 n.remove()
             self.build_bar(2)
-        elif beat == 5:
+        elif now_beat == 5:
             self.bar_indicator.pos = (Mm(90), Mm(20))
             for n in self.notes_on_staff_list_1:
                 n.remove()
