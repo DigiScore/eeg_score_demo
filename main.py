@@ -17,6 +17,7 @@ from neoscore.western.pedal_line import PedalLine
 
 
 class Main:
+    """Main thread for running this digital score."""
     def __init__(self):
         # start brainbit reading
         self.bb = BrainbitReader()
@@ -194,8 +195,7 @@ class Main:
         self.bar_indicator = PedalLine(
             (Mm(0), Mm(20)),
             self.b_staff,
-            Mm(90),
-            half_lift_positions=[Mm(45)]
+            Mm(90)
         )
 
     def change_beat(self, beat):

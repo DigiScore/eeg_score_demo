@@ -1,6 +1,13 @@
 from music21 import converter
 
 def get_midi_lists():
+    """Parses the note and rest data from a given midifile
+    into separate part lists.
+    Returns: s, a, t, b lists"""
+
+    # This works for this midi file.
+    # For others to work may need some adjustment in the code.
+
     mf = 'purcell_low.mid'
     score_in = converter.parse(mf)
     s = []
